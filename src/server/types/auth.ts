@@ -16,5 +16,39 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password tidak boleh kosong"),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    userId: z.string().min(1, "User ID tidak boleh kosong"),
+    token: z.string().min(1, "Token tidak boleh kosong"),
+    newPassword: z.string().min(8, "Password minimal 8 karakter"),
+    confirmPassword: z
+      .string()
+      .min(1, "Konfirmasi password tidak boleh kosong"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Password dan konfirmasi password tidak cocok",
+    path: ["confirmPassword"],
+  });
+
+export const resendOTPSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+});
+
+export const verifyOTPSchema = z.object({
+  userId: z.string().min(1, "User ID tidak boleh kosong"),
+  otp: z
+    .string()
+    .length(4, "OTP harus tepat 4 digit")
+    .regex(/^\d+$/, "OTP hanya boleh berisi angka"),
+});
+
 export type TRegisterInput = z.infer<typeof registerSchema>;
 export type TLoginInput = z.infer<typeof loginSchema>;
+export type TForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type TResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type TResendOTPInput = z.infer<typeof resendOTPSchema>;
+export type TVerifyOTPInput = z.infer<typeof verifyOTPSchema>;

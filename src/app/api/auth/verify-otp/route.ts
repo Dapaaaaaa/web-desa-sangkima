@@ -2,26 +2,14 @@ import { NextResponse } from "next/server";
 import { authService } from "@/server/services/auth.service";
 import z from "zod";
 
-const verifyOTPSchema = z.object({
-  userId: z.string().min(1, "User ID tidak boleh kosong"),
-  otp: z
-    .string()
-    .length(4, "OTP harus tepat 4 digit")
-    .regex(/^\d+$/, "OTP hanya boleh berisi angka"),
-});
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const validatedData = verifyOTPSchema.parse(body);
 
-    const result = await authService.verifyOTP(
-      validatedData.userId,
-      validatedData.otp,
-    );
+    const result = await authService.verifyOTP(body);
 
     return NextResponse.json(
-      { success: true, message: result.message },
+      { success: result.success, message: result.message },
       { status: 200 },
     );
   } catch (error: any) {
