@@ -164,4 +164,52 @@ export const userRepository = {
       .set({ password: newPasswordHash })
       .where(eq(users.id, userId));
   },
+
+  /**
+   * Create email change token dengan meta berisi email baru
+   */
+  async createEmailChangeToken(
+    userId: string,
+    otp: string,
+    newEmail: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await db.insert(userTokens).values({
+      userId,
+      token: otp,
+      type: "EmailChange",
+      meta: { newEmail },
+      expiresAt,
+      usedAt: null,
+    });
+  },
+
+  /**
+   * Find valid email change token (belum expired dan belum dipakai)
+   */
+  async findValidEmailChangeToken(userId: string, otp: string) {
+    const now = new Date();
+    const result = await db
+      .select()
+      .from(userTokens)
+      .where(
+        and(
+          eq(userTokens.userId, userId),
+          eq(userTokens.token, otp),
+          eq(userTokens.type, "EmailChange"),
+          isNull(userTokens.usedAt),
+          gt(userTokens.expiresAt, now),
+        ),
+      )
+      .limit(1);
+
+    return result[0];
+  },
+
+  /**
+   * Update user email
+   */
+  async updateUserEmail(userId: string, newEmail: string): Promise<void> {
+    await db.update(users).set({ email: newEmail }).where(eq(users.id, userId));
+  },
 };

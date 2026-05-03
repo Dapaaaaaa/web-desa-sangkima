@@ -46,9 +46,24 @@ export const verifyOTPSchema = z.object({
     .regex(/^\d+$/, "OTP hanya boleh berisi angka"),
 });
 
+export const changeEmailSchema = z.object({
+  userId: z.string().min(1, "User ID tidak boleh kosong"),
+  newEmail: z.string().email("Format email baru tidak valid"),
+});
+
+export const verifyEmailChangeSchema = z.object({
+  userId: z.string().min(1, "User ID tidak boleh kosong"),
+  otp: z
+    .string()
+    .length(4, "OTP harus tepat 4 digit")
+    .regex(/^\d+$/, "OTP hanya boleh berisi angka"),
+});
+
 export type TRegisterInput = z.infer<typeof registerSchema>;
 export type TLoginInput = z.infer<typeof loginSchema>;
 export type TForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type TResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type TResendOTPInput = z.infer<typeof resendOTPSchema>;
 export type TVerifyOTPInput = z.infer<typeof verifyOTPSchema>;
+export type TChangeEmailInput = z.infer<typeof changeEmailSchema>;
+export type TVerifyEmailChangeInput = z.infer<typeof verifyEmailChangeSchema>;

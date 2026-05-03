@@ -5,12 +5,16 @@ import {
   resetPasswordSchema,
   resendOTPSchema,
   verifyOTPSchema,
+  changeEmailSchema,
+  verifyEmailChangeSchema,
   TRegisterInput,
   TLoginInput,
   TForgotPasswordInput,
   TResetPasswordInput,
   TResendOTPInput,
   TVerifyOTPInput,
+  TChangeEmailInput,
+  TVerifyEmailChangeInput,
 } from "../types/auth";
 import { userRepository } from "../repositories/user.repository";
 import { hashPassword, comparePassword } from "../utils/hash";
@@ -287,6 +291,117 @@ export const authService = {
         nik: user.nik,
       },
       token,
+    };
+  },
+
+  async changeEmail(input: TChangeEmailInput) {
+    const validatedData = changeEmailSchema.parse(input);
+
+    // Get user
+    const user = await userRepository.findById(validatedData.userId);
+
+    if (!user) {
+      throw new Error("User tidak ditemukan");
+    }
+
+    // Check if new email already registered
+    const existingUser = await userRepository.findByEmail(
+      validatedData.newEmail,
+    );
+    if (existingUser && existingUser.id !== validatedData.userId) {
+      throw new Error("Email baru sudah terdaftar");
+    }
+
+    // Delete old email change tokens
+    await db
+      .delete(userTokens)
+      .where(
+        and(
+          eq(userTokens.userId, validatedData.userId),
+          eq(userTokens.type, "EmailChange"),
+        ),
+      );
+
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = getOTPExpiration();
+
+    // Create email change token dengan meta berisi email baru
+    await userRepository.createEmailChangeToken(
+      validatedData.userId,
+      otp,
+      validatedData.newEmail,
+      expiresAt,
+    );
+
+    // Send OTP email ke new email
+    try {
+      await sendOTPEmail(validatedData.newEmail, otp);
+    } catch (error) {
+      console.error("Failed to send OTP email:", error);
+      throw new Error("Gagal mengirim OTP ke email baru");
+    }
+
+    return {
+      success: true,
+      message: "Kode OTP telah dikirim ke email baru Anda",
+      data: {
+        userId: validatedData.userId,
+        newEmail: validatedData.newEmail,
+      },
+    };
+  },
+
+  async verifyEmailChange(input: TVerifyEmailChangeInput) {
+    const validatedData = verifyEmailChangeSchema.parse(input);
+
+    // Find valid email change token
+    const emailChangeToken = await userRepository.findValidEmailChangeToken(
+      validatedData.userId,
+      validatedData.otp,
+    );
+
+    if (!emailChangeToken) {
+      throw new Error("Kode OTP tidak valid atau sudah expired");
+    }
+
+    // Get meta dengan email baru - handle both string dan object
+    let meta: { newEmail: string } | null = null;
+
+    if (emailChangeToken.meta) {
+      if (typeof emailChangeToken.meta === "string") {
+        try {
+          meta = JSON.parse(emailChangeToken.meta);
+        } catch (error) {
+          console.error("Failed to parse meta JSON:", error);
+          throw new Error("Data email baru tidak valid");
+        }
+      } else {
+        meta = emailChangeToken.meta as { newEmail: string };
+      }
+    }
+
+    console.log(`Email change token meta:`, {
+      raw: emailChangeToken.meta,
+      parsed: meta,
+    });
+
+    if (!meta || !meta.newEmail) {
+      throw new Error("Data email baru tidak ditemukan");
+    }
+
+    // Update user email
+    await userRepository.updateUserEmail(validatedData.userId, meta.newEmail);
+
+    // Mark token as used
+    await userRepository.markTokenAsUsed(emailChangeToken.id);
+
+    return {
+      success: true,
+      message: "Email berhasil diubah",
+      data: {
+        newEmail: meta.newEmail,
+      },
     };
   },
 };
