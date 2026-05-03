@@ -1,10 +1,43 @@
+/**
+ * @swagger
+ * /api/auth/test-email:
+ *   post:
+ *     tags:
+ *       - Utilities
+ *     summary: "🧪 Test email configuration"
+ *     description: Test email configuration by sending a test email. Development/debugging purpose only.
+ *     operationId: testEmailConfig
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - testEmail
+ *             properties:
+ *               testEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: test@example.com
+ *     responses:
+ *       200:
+ *         description: Test email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing testEmail parameter
+ */
+
 import { NextResponse } from "next/server";
 
-/**
- * Test email configuration
- * Endpoint untuk debug apakah email config benar
- * POST /api/auth/test-email
- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();

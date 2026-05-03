@@ -1,12 +1,62 @@
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     tags:
+ *       - Profile
+ *     summary: "👤 Get current user profile (requires auth)"
+ *     description: Retrieve current authenticated user's profile information. Requires valid JWT token.
+ *     operationId: getCurrentUserProfile
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     nik:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     positionId:
+ *                       type: string
+ *                       nullable: true
+ *                     address:
+ *                       type: string
+ *                       nullable: true
+ *                     birthday:
+ *                       type: string
+ *                       format: date
+ *                       nullable: true
+ *                     gender:
+ *                       type: string
+ *                       nullable: true
+ *       401:
+ *         description: Unauthorized - invalid or expired token
+ *       404:
+ *         description: User not found
+ */
+
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/server/middlewares/auth.middleware";
 import { userRepository } from "@/server/repositories/user.repository";
 
-/**
- * Get current authenticated user
- * GET /api/auth/me
- * Header: Authorization: Bearer <token>
- */
 export async function GET(req: Request) {
   try {
     // Verify JWT token

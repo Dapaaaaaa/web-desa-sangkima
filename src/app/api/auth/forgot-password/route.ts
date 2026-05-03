@@ -1,3 +1,41 @@
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Password Reset Flow
+ *     summary: "1️⃣ Request password reset"
+ *     description: Request password reset by providing registered email. Sends reset link to email. Returns generic message for security.
+ *     operationId: requestPasswordReset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Reset request processed (returns generic message for security)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Email not verified yet or validation failed
+ */
+
 import { NextResponse } from "next/server";
 import { authService } from "@/server/services/auth.service";
 import z from "zod";

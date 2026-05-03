@@ -1,3 +1,52 @@
+/**
+ * @swagger
+ * /api/auth/change-email:
+ *   post:
+ *     tags:
+ *       - Email Management Flow
+ *     summary: "1️⃣ Request email change (requires auth)"
+ *     description: Request to change user's email address. Sends OTP to new email for verification. Requires authentication.
+ *     operationId: requestEmailChange
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newEmail
+ *             properties:
+ *               newEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: newemail@example.com
+ *     responses:
+ *       200:
+ *         description: OTP sent to new email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     newEmail:
+ *                       type: string
+ *       400:
+ *         description: Email already registered or validation failed
+ *       401:
+ *         description: Unauthorized - please login first
+ */
+
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/server/middlewares/auth.middleware";
 import { authService } from "@/server/services/auth.service";

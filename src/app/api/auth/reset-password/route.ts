@@ -1,3 +1,55 @@
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Password Reset Flow
+ *     summary: "2️⃣ Apply new password with token"
+ *     description: Reset password using userId, reset token, and new password. Token obtained from forgot-password email link.
+ *     operationId: applyPasswordReset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - token
+ *               - newPassword
+ *               - confirmPassword
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: user_id_123
+ *               token:
+ *                 type: string
+ *                 example: reset_token_hash
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: newpassword123
+ *               confirmPassword:
+ *                 type: string
+ *                 example: newpassword123
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid token or validation failed
+ *       404:
+ *         description: User not found
+ */
+
 import { NextResponse } from "next/server";
 import { authService } from "@/server/services/auth.service";
 import z from "zod";

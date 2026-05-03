@@ -1,3 +1,50 @@
+/**
+ * @swagger
+ * /api/auth/verify-email-change:
+ *   post:
+ *     tags:
+ *       - Email Management Flow
+ *     summary: "2️⃣ Verify email change with OTP (requires auth)"
+ *     description: Verify email change using OTP sent to new email. Applies the email change if OTP is valid. Requires authentication.
+ *     operationId: verifyEmailChange
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 pattern: "^[0-9]{4}$"
+ *                 example: "1234"
+ *     responses:
+ *       200:
+ *         description: Email changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     newEmail:
+ *                       type: string
+ *       400:
+ *         description: Invalid or expired OTP
+ *       401:
+ *         description: Unauthorized - please login first
+ */
+
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/server/middlewares/auth.middleware";
 import { authService } from "@/server/services/auth.service";
