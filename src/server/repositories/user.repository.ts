@@ -23,6 +23,15 @@ export const userRepository = {
     return result[0];
   },
 
+  async findById(id: string) {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return result[0];
+  },
+
   async createUser(data: TRegisterInput & { passwordHash: string }) {
     const newId = createId();
 
@@ -52,7 +61,6 @@ export const userRepository = {
     expiresAt: Date,
   ): Promise<void> {
     await db.insert(userTokens).values({
-      id: createId(),
       userId,
       token: otp,
       type: "OTP",
@@ -87,7 +95,7 @@ export const userRepository = {
   /**
    * Mark token as used
    */
-  async markTokenAsUsed(tokenId: string): Promise<void> {
+  async markTokenAsUsed(tokenId: number): Promise<void> {
     await db
       .update(userTokens)
       .set({ usedAt: new Date() })
@@ -101,6 +109,59 @@ export const userRepository = {
     await db
       .update(users)
       .set({ emailVerifiedAt: new Date() })
+      .where(eq(users.id, userId));
+  },
+
+  /**
+   * Create password reset token untuk user
+   */
+  async createPasswordResetToken(
+    userId: string,
+    resetToken: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await db.insert(userTokens).values({
+      userId,
+      token: resetToken,
+      type: "PasswordChange",
+      meta: null,
+      expiresAt,
+      usedAt: null,
+    });
+  },
+
+  /**
+   * Find valid password reset token (belum expired dan belum dipakai)
+   */
+  async findValidPasswordResetToken(userId: string, resetToken: string) {
+    const now = new Date();
+    const result = await db
+      .select()
+      .from(userTokens)
+      .where(
+        and(
+          eq(userTokens.userId, userId),
+          eq(userTokens.token, resetToken),
+          eq(userTokens.type, "PasswordChange"),
+          isNull(userTokens.usedAt),
+          gt(userTokens.expiresAt, now),
+        ),
+      )
+      .limit(1);
+
+    return result[0];
+  },
+
+  /**
+   * Update user password
+   */
+  async updateUserPassword(
+    userId: string,
+    newPasswordHash: string,
+  ): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: newPasswordHash })
       .where(eq(users.id, userId));
   },
 };

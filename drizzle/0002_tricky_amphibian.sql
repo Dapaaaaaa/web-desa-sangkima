@@ -1,0 +1,1 @@
+ALTER TABLE `user_tokens` MODIFY COLUMN `id` bigint AUTO_INCREMENT NOT NULL;

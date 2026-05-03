@@ -1,4 +1,3 @@
-import { createId } from "@paralleldrive/cuid2";
 import {
   datetime,
   json,
@@ -6,15 +5,14 @@ import {
   mysqlTable,
   timestamp,
   varchar,
+  bigint,
 } from "drizzle-orm/mysql-core";
 import { users } from "./users";
 
 const tokenTypes = mysqlEnum(["OTP", "PasswordChange", "EmailChange"]);
 
 export const userTokens = mysqlTable("user_tokens", {
-  id: varchar({ length: 128 })
-    .primaryKey()
-    .$defaultFn(() => createId()),
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
   userId: varchar("user_id", { length: 128 })
     .references(() => users.id)
     .notNull(),
