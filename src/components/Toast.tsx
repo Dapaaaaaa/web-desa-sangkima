@@ -21,75 +21,72 @@ export default function Toast({
   duration = 4000,
   onClose,
 }: ToastProps) {
-  const [remaining, setRemaining] = useState(duration);
-  const [isExiting, setIsExiting] = useState(false); // State pemicu animasi Pop-Close
+  const [isExiting, setIsExiting] = useState(false);
 
-  // Fungsi pengadang agar menjalankan animasi keluar dulu sebelum unmount penuh
   const triggerClose = () => {
     setIsExiting(true);
     setTimeout(() => {
       onClose(id);
-    }, 300); // 300ms sesuai durasi keyframe popupOut
+    }, 300); // Jeda 300ms untuk animasi pop-close keluar ke atas
   };
 
   useEffect(() => {
-    const start = Date.now();
-    const tick = 100;
-    const iv = setInterval(() => {
-      const elapsed = Date.now() - start;
-      setRemaining(Math.max(0, duration - elapsed));
-    }, tick);
+    // Jalankan timer penutupan langsung menggunakan setTimeout standar (Sangat stabil di iOS)
+    const timer = setTimeout(() => {
+      triggerClose();
+    }, duration);
 
-    const to = setTimeout(() => triggerClose(), duration);
-
-    return () => {
-      clearInterval(iv);
-      clearTimeout(to);
-    };
+    return () => clearTimeout(timer);
   }, [id, duration]);
-
-  const percent = Math.round((remaining / duration) * 100);
 
   const color =
     type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-[#70C7FF]";
 
   return (
-    /* Di sini kelas dari globals.css dipanggil secara dinamis bergantian */
-    <div className={`w-[380px] max-w-full bg-white shadow-[0_15px_35px_rgba(0,0,0,0.06)] rounded-[16px] overflow-hidden border border-gray-100 font-sans transition-all will-change-transform
+    <div className={`w-full max-w-[calc(100vw-32px)] md:w-[380px] bg-white shadow-[0_15px_35px_rgba(0,0,0,0.06)] rounded-[16px] overflow-hidden border border-gray-100 font-sans transition-all will-change-transform box-border
       ${isExiting ? "animate-popup-out" : "animate-popup-in"}`}
     >
       <div className="p-4 flex items-start gap-3">
-        <div className="mt-0.5 font-bold text-sm">
+        {/* Ikon Status */}
+        <div className="mt-0.5 font-bold text-sm select-none">
           {type === "success" && <span className="text-green-500">✓</span>}
           {type === "error" && <span className="text-red-500">✕</span>}
           {type === "info" && <span className="text-[#00A3FF]">i</span>}
         </div>
 
-        <div className="flex-1">
-          {title && <div className="font-extrabold text-sm text-black mb-0.5">{title}</div>}
-          <div className="text-xs text-[#797979] font-medium leading-relaxed">{message}</div>
+        {/* Konten Teks */}
+        <div className="flex-1 min-w-0">
+          {title && <div className="font-extrabold text-sm text-black mb-0.5 truncate">{title}</div>}
+          <div className="text-xs text-[#797979] font-medium leading-relaxed break-words">{message}</div>
         </div>
 
+        {/* Tombol Silang */}
         <button
-          aria-label="close"
           onClick={triggerClose}
-          className="text-gray-300 hover:text-black transition-colors text-xs p-0.5"
+          className="text-gray-300 hover:text-black transition-colors text-xs p-0.5 select-none"
         >
           ✕
         </button>
       </div>
 
-      <div className="flex items-center justify-between px-4 pb-2">
-        <div className="w-32 h-[3px] bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className={`${color} h-full transition-[width] duration-100 linear`}
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        <div className="text-[10px] font-bold text-[#797979] tracking-wider">
-          {Math.ceil(remaining / 1000)}s
-        </div>
+      {/* Progress Bar Statis Beranimasi CSS (Jauh lebih aman untuk batre & performa iPhone 13) */}
+      <div className="h-[3px] bg-gray-100 w-full relative">
+        <div
+          className={`${color} h-full absolute left-0 top-0 transition-all rounded-full`}
+          style={{ 
+            width: "100%",
+            animation: `shrinkWidth ${duration}ms linear forwards` 
+          }}
+        />
       </div>
+
+      {/* Tambahkan style internal khusus untuk menggerakkan progress bar tanpa JavaScript */}
+      <style jsx>{`
+        @keyframes shrinkWidth {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
     </div>
   );
 }
