@@ -132,7 +132,7 @@ export default function LoginPage() {
 
             {/* Aksi Lupa Sandi */}
             <div className="text-right mb-5 lg:mb-6">
-              <a href="/forgot-password" className="text-xs font-bold text-[#00A3FF] hover:underline lg:text-sm">
+              <a href="/forgot-password" className="text-xs font-bold text-[#009FFF] hover:underline lg:text-sm">
                 Lupa Sandi?
               </a>
             </div>
@@ -149,7 +149,7 @@ export default function LoginPage() {
             {/* Pendaftaran Akun Baru */}
             <div className="text-center mt-4 text-xs text-[#777777] lg:text-sm lg:mt-6">
               Belum punya akun?{" "}
-              <a href="/register" className="font-bold text-[#00A3FF] hover:underline">
+              <a href="/register" className="font-bold text-[#009FFF] hover:underline">
                 Daftar
               </a>
             </div>
