@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import Toast, { ToastProps } from "./Toast";
 
 type ShowToastOptions = {
@@ -39,45 +39,41 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
       duration: opts.duration ?? 4000,
       onClose: remove,
     };
+    // Item baru masuk di index 0 (paling depan tumpukan)
     setToasts((s) => [toast, ...s]);
   }, [remove]);
 
   const value = useMemo(() => ({ showToast }), [showToast]);
 
-  // Expose a dev helper on window to trigger toasts from console
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.showToast = ({ message, title, type }: { message: string; title?: string; type?: "info" | "success" | "error" }) => {
-        showToast({ message, title, type });
-      };
-      return () => {
-        try {
-          delete window.showToast;
-        } catch (e) {
-          // ignore
-        }
-      };
-    }
-  }, [showToast]);
-
   return (
     <ToastContext.Provider value={value}>
       {children}
 
-      {/* Container top-right */}
-      <div className="fixed z-50 top-4 right-4 flex flex-col gap-3 items-end">
-        {toasts.map((t) => (
-          <Toast key={t.id} {...t} />
-        ))}
+      {/* 📍 STACK CONTROLLER POJOK KANAN ATAS
+        - Di HP maupun PC, wadah utama dikunci mati di pojok kanan atas (`top-4 right-4`).
+        - `pointer-events-none`: Menjamin layar sentuh di area kosong tidak macet.
+      */}
+      <div className="fixed z-[99999] top-4 right-4 w-auto h-auto flex justify-end items-start pointer-events-none">
+        <div className="relative w-full h-full flex flex-col items-end">
+          {toasts.map((t, index) => (
+            <div 
+              key={t.id} 
+              className="pointer-events-auto absolute top-0 right-0 max-w md:max-w-[360px] transition-all duration-300 ease-out"
+              style={{
+                // 🎛️ MEKANISME TUMPUKAN MEKANIK:
+                // - `zIndex`: Index 0 (terbaru) ditaruh di paling depan layar.
+                // - `translateY`: Digeser ke bawah perlahan sebanyak 12px per tumpukan di belakangnya.
+                // - `scale`: Mengecil perlahan ke belakang (1, 0.95, 0.90) menciptakan efek 3D Stack.
+                zIndex: 100 - index,
+                transform: `translateY(${index * 12}px) scale(${1 - index * 0.04})`,
+                opacity: index > 2 ? 0 : 1 - index * 0.25,
+              }}
+            >
+              <Toast {...t} />
+            </div>
+          ))}
+        </div>
       </div>
     </ToastContext.Provider>
   );
 }
-
-// Expose types for manual usage
-declare global {
-  interface Window {
-    showToast?: (opts: { message: string; title?: string; type?: "info" | "success" | "error" }) => void;
-  }
-}
-

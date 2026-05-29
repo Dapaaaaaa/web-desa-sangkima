@@ -35,7 +35,7 @@ export default function LoginPage() {
         throw new Error(data.message || "Gagal masuk ke akun Anda");
       }
 
-      // Memicu Toast Sukses yang Estetik
+      // Memicu Toast Sukses Mini di Pojok Kanan Atas
       toast("Selamat datang kembali! Mengalihkan ke sistem...", "Sistem Terverifikasi", "success", 4000);
       
       // Delay tipis agar user sempat melihat efek sukses toast sebelum pindah page
@@ -46,15 +46,9 @@ export default function LoginPage() {
     } catch (err: any) {
       const msg = err?.message || "Gagal terhubung ke server";
       
-      // Mengirim pesan gagal ke komponen Toast eksternal kamu
-      try {
-        toast(msg, "Validasi Gagal", "error", 5000);
-      } catch (_) {
-        // Fallback cadangan jika provider belum ter-render sempurna
-        if (typeof window !== "undefined" && window.showToast) {
-          window.showToast({ message: msg, title: "Validasi Gagal", type: "error" });
-        }
-      }
+      // 🔥 REVISI BERSIH: Langsung menembak jalur context utama tanpa bypass objek window browser
+      toast(msg, "Validasi Gagal", "error", 5000);
+      
     } finally {
       setIsLoading(false);
     }

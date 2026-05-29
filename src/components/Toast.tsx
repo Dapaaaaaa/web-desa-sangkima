@@ -43,8 +43,8 @@ export default function Toast({
     type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-[#70C7FF]";
 
   return (
-    <div className={`w-full max-w-[calc(100vw-32px)] md:w-[380px] bg-white shadow-[0_15px_35px_rgba(0,0,0,0.06)] rounded-[16px] overflow-hidden border border-gray-100 font-sans transition-all will-change-transform box-border
-      ${isExiting ? "animate-popup-out" : "animate-popup-in"}`}
+    <div className={`w-max max-w-[calc(100vw-32px)] md:min-w-[360px] md:max-w-[420px] bg-white shadow-[0_15px_35px_rgba(0,0,0,0.06)] rounded-[16px] overflow-hidden border border-gray-100 font-sans transition-all will-change-transform box-border
+    ${isExiting ? "opacity-0 -translate-y-4 scale-95" : "opacity-100 translate-y-0 scale-100 animate-fade-in"}`}
     >
       <div className="p-4 flex items-start gap-3">
         {/* Ikon Status */}
