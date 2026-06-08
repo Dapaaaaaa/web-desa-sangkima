@@ -264,6 +264,10 @@ export const authService = {
       throw new Error("Email atau password salah");
     }
 
+    if (user.deletedAt) {
+      throw new Error("Akun ini telah dinonaktifkan. Hubungi administrator.");
+    }
+
     // Check if email is verified
     if (!user.emailVerifiedAt) {
       throw new Error("Email belum diaktifkan. Silakan verifikasi email Anda.");
