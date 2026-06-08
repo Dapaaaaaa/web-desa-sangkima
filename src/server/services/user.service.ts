@@ -1,0 +1,128 @@
+import { userRepository } from "../repositories/user.repository";
+import { hashPassword } from "../utils/hash";
+import {
+  createUserByAdminSchema,
+  updateUserSchema,
+  type UserDTO,
+  type PaginationMeta,
+} from "../types/user";
+
+type UserRow = NonNullable<
+  Awaited<ReturnType<typeof userRepository.findByIdWithPosition>>
+>;
+
+function toDTO(row: UserRow): UserDTO {
+  return {
+    id: row.user.id,
+    name: row.user.name,
+    email: row.user.email,
+    nik: row.user.nik,
+    role: row.user.role as UserDTO["role"],
+    positionId: row.user.positionId ?? null,
+    positionName: row.positionName ?? null,
+    religion: row.user.religion ?? null,
+    address: row.user.address ?? null,
+    birthday: row.user.birthday ?? null,
+    placeOfBirth: row.user.placeOfBirth ?? null,
+    job: row.user.job ?? null,
+    gender: row.user.gender ?? null,
+    telp: row.user.telp ?? null,
+    citizenship: row.user.citizenship ?? null,
+    status: row.user.status ?? null,
+    education: row.user.education ?? null,
+    emailVerifiedAt: row.user.emailVerifiedAt ?? null,
+    createdAt: row.user.createdAt ?? null,
+    updatedAt: row.user.updatedAt ?? null,
+  };
+}
+
+export const userService = {
+  async list(
+    page: number,
+    limit: number,
+  ): Promise<{ data: UserDTO[]; pagination: PaginationMeta }> {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(100, Math.max(1, limit));
+
+    const { rows, total } = await userRepository.findAllPaginated(
+      safePage,
+      safeLimit,
+    );
+
+    return {
+      data: rows.map((row) => toDTO(row as UserRow)),
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    };
+  },
+
+  async getById(id: string): Promise<UserDTO> {
+    const row = await userRepository.findByIdWithPosition(id);
+    if (!row) throw new Error("User tidak ditemukan");
+    return toDTO(row);
+  },
+
+  async createByAdmin(input: unknown): Promise<UserDTO> {
+    const data = createUserByAdminSchema.parse(input);
+
+    const existing = await userRepository.findByEmailOrNik(
+      data.email,
+      data.nik,
+    );
+    if (existing) {
+      const conflict =
+        existing.email === data.email ? "Email" : "NIK";
+      throw new Error(`${conflict} sudah digunakan`);
+    }
+
+    const passwordHash = await hashPassword(data.password);
+    const row = await userRepository.createByAdmin({ ...data, passwordHash });
+    if (!row) throw new Error("Gagal membuat user");
+    return toDTO(row);
+  },
+
+  async update(id: string, input: unknown): Promise<UserDTO> {
+    const data = updateUserSchema.parse(input);
+
+    const current = await userRepository.findByIdWithPosition(id);
+    if (!current) throw new Error("User tidak ditemukan");
+
+    if (data.email && data.email !== current.user.email) {
+      const duplicate = await userRepository.findByEmailExcept(data.email, id);
+      if (duplicate) throw new Error("Email sudah digunakan");
+    }
+
+    if (data.nik && data.nik !== current.user.nik) {
+      const duplicate = await userRepository.findByNikExcept(data.nik, id);
+      if (duplicate) throw new Error("NIK sudah digunakan");
+    }
+
+    const { password, birthday, ...rest } = data;
+    const updateData: Record<string, unknown> = { ...rest };
+
+    if (password) {
+      updateData.password = await hashPassword(password);
+    }
+
+    if (birthday !== undefined) {
+      updateData.birthday = birthday ? new Date(birthday) : null;
+    }
+
+    const row = await userRepository.updateUser(
+      id,
+      updateData as Partial<typeof import("../db/schema").users.$inferInsert>,
+    );
+    if (!row) throw new Error("Gagal memperbarui user");
+    return toDTO(row);
+  },
+
+  async softDelete(id: string): Promise<void> {
+    const existing = await userRepository.findByIdWithPosition(id);
+    if (!existing) throw new Error("User tidak ditemukan");
+    await userRepository.softDeleteUser(id);
+  },
+};
