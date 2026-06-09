@@ -59,6 +59,13 @@ export const letterRequestRepository = {
     return rows[0];
   },
 
+  async findByVerificationCode(code: string) {
+    const rows = await joinedQuery()
+      .where(eq(letterRequests.verificationCode, code))
+      .limit(1);
+    return rows[0];
+  },
+
   async findByUser(userId: string, status?: LetterStatus) {
     const conditions = [eq(letterRequests.userId, userId)];
     if (status) conditions.push(eq(letterRequests.status, status));

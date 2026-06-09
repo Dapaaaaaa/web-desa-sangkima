@@ -5,6 +5,7 @@ import {
   letterRequestRepository,
   type LetterRequestJoinedRow,
 } from "../repositories/letterRequest.repository";
+import { userRepository } from "../repositories/user.repository";
 import type { AuthUser } from "../middlewares/role.middleware";
 import {
   createLetterRequestSchema,
@@ -14,8 +15,10 @@ import {
   type LetterFieldDef,
   type LetterRequestDTO,
   type LetterStatus,
+  type LetterVerificationDTO,
 } from "../types/letter";
 import { formatLetterNumber } from "../utils/letter-number";
+import { generateLetterPdf } from "./pdf.service";
 
 function toDTO(row: LetterRequestJoinedRow): LetterRequestDTO {
   const r = row.request;
@@ -211,6 +214,69 @@ export const letterRequestService = {
       changedBy: actor.id,
     });
     return toDTO(await getRowOrThrow(id));
+  },
+
+  // Verifikasi publik via kode QR (tanpa auth, tanpa data sensitif)
+  async verifyByCode(code: string): Promise<LetterVerificationDTO> {
+    const row = await letterRequestRepository.findByVerificationCode(code);
+    if (!row || row.request.status === "DITOLAK") {
+      return {
+        valid: false,
+        letterNumber: null,
+        letterTypeName: null,
+        requesterName: null,
+        approvedAt: null,
+      };
+    }
+    return {
+      valid: true,
+      letterNumber: row.request.letterNumber ?? null,
+      letterTypeName: row.typeName,
+      requesterName: row.requesterName,
+      approvedAt: row.request.approvedAt
+        ? row.request.approvedAt.toISOString()
+        : null,
+    };
+  },
+
+  // Generate PDF surat (hanya yang sudah DISETUJUI/SELESAI)
+  async generatePdf(
+    id: string,
+    actor: AuthUser,
+    appUrl: string,
+  ): Promise<Uint8Array> {
+    const row = await getRowOrThrow(id);
+    if (actor.role === "user" && row.request.userId !== actor.id) {
+      throw new Error("Anda tidak berhak mengunduh surat ini");
+    }
+    if (
+      row.request.status !== "DISETUJUI" &&
+      row.request.status !== "SELESAI"
+    ) {
+      throw new Error("Surat belum disetujui, PDF belum bisa dibuat");
+    }
+
+    const user = await userRepository.findById(row.request.userId);
+    const type = await letterTypeRepository.findById(row.request.letterTypeId);
+
+    return generateLetterPdf({
+      letterNumber: row.request.letterNumber ?? "-",
+      verificationCode: row.request.verificationCode ?? "",
+      approvedAt: row.request.approvedAt ?? new Date(),
+      template: type?.template ?? null,
+      letterTypeName: row.typeName,
+      requester: {
+        name: row.requesterName,
+        nik: row.requesterNik,
+        address: user?.address ?? null,
+        placeOfBirth: user?.placeOfBirth ?? null,
+        birthday: user?.birthday ?? null,
+        job: user?.job ?? null,
+      },
+      purpose: row.request.purpose,
+      data: row.request.data ?? null,
+      appUrl,
+    });
   },
 
   // Dispatcher aksi petugas dari satu endpoint PATCH
