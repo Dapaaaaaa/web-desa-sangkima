@@ -53,18 +53,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { letterRequestService } from "@/server/services/letterRequest.service";
-import { getAuthUser } from "@/server/middlewares/role.middleware";
+import {
+  requireRole,
+  handleACLError,
+} from "@/server/middlewares/acl.middleware";
 import { LETTER_STATUSES, type LetterStatus } from "@/server/types/letter";
 
 export async function GET(req: Request) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    const auth = await requireRole(req, ["user", "staff", "admin"]);
 
     const { searchParams } = new URL(req.url);
     const statusParam = searchParams.get("status");
@@ -83,6 +80,7 @@ export async function GET(req: Request) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     return NextResponse.json(
       {
         success: false,
@@ -95,13 +93,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    const auth = await requireRole(req, ["user", "staff", "admin"]);
 
     const body = await req.json();
     const data = await letterRequestService.create(auth, body);
@@ -111,6 +103,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {

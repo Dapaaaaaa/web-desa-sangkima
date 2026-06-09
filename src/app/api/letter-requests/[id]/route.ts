@@ -68,19 +68,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { letterRequestService } from "@/server/services/letterRequest.service";
-import { getAuthUser } from "@/server/middlewares/role.middleware";
+import {
+  requireRole,
+  handleACLError,
+} from "@/server/middlewares/acl.middleware";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    const auth = await requireRole(req, ["user", "staff", "admin"]);
 
     const { id } = await params;
     const data = await letterRequestService.getForActor(id, auth);
@@ -89,6 +86,7 @@ export async function GET(req: Request, { params }: RouteContext) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     return NextResponse.json(
       {
         success: false,
@@ -101,13 +99,8 @@ export async function GET(req: Request, { params }: RouteContext) {
 
 export async function PATCH(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    // hanya petugas; aturan lebih rinci (approve = admin) ditegakkan di service
+    const auth = await requireRole(req, ["staff", "admin"]);
 
     const { id } = await params;
     const body = await req.json();
@@ -118,6 +111,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -128,7 +122,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
         { status: 400 },
       );
     }
-    // pesan dari aturan role -> 403, selain itu 400
+    // pesan aturan role dari service (mis. approve hanya admin) -> 403
     const isForbidden = /berhak|Hanya/i.test(error.message || "");
     return NextResponse.json(
       {
