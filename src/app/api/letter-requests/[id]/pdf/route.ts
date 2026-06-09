@@ -28,19 +28,16 @@
  */
 
 import { letterRequestService } from "@/server/services/letterRequest.service";
-import { getAuthUser } from "@/server/middlewares/role.middleware";
+import {
+  requireRole,
+  handleACLError,
+} from "@/server/middlewares/acl.middleware";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return Response.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    const auth = await requireRole(req, ["user", "staff", "admin"]);
 
     const { id } = await params;
     const appUrl = new URL(req.url).origin;
@@ -54,6 +51,8 @@ export async function GET(req: Request, { params }: RouteContext) {
       },
     });
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
+    // pesan kepemilikan dari service (warga bukan pemilik) -> 403
     const isForbidden = /berhak/i.test(error.message || "");
     return Response.json(
       {

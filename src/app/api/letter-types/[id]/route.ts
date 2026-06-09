@@ -75,19 +75,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { letterTypeService } from "@/server/services/letterType.service";
-import { getAuthUser } from "@/server/middlewares/role.middleware";
+import {
+  requireRole,
+  handleACLError,
+} from "@/server/middlewares/acl.middleware";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
+    await requireRole(req, ["user", "staff", "admin"]);
 
     const { id } = await params;
     const data = await letterTypeService.getById(id);
@@ -96,6 +93,7 @@ export async function GET(req: Request, { params }: RouteContext) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     return NextResponse.json(
       {
         success: false,
@@ -108,19 +106,7 @@ export async function GET(req: Request, { params }: RouteContext) {
 
 export async function PUT(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
-    if (auth.role !== "admin") {
-      return NextResponse.json(
-        { success: false, message: "Hanya admin yang boleh mengubah jenis surat" },
-        { status: 403 },
-      );
-    }
+    await requireRole(req, ["admin"]);
 
     const { id } = await params;
     const body = await req.json();
@@ -131,6 +117,7 @@ export async function PUT(req: Request, { params }: RouteContext) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -153,19 +140,7 @@ export async function PUT(req: Request, { params }: RouteContext) {
 
 export async function DELETE(req: Request, { params }: RouteContext) {
   try {
-    const auth = await getAuthUser(req);
-    if (!auth) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - token tidak valid" },
-        { status: 401 },
-      );
-    }
-    if (auth.role !== "admin") {
-      return NextResponse.json(
-        { success: false, message: "Hanya admin yang boleh menonaktifkan jenis surat" },
-        { status: 403 },
-      );
-    }
+    await requireRole(req, ["admin"]);
 
     const { id } = await params;
     // soft-disable: set active=false agar surat lama tetap valid
@@ -176,6 +151,7 @@ export async function DELETE(req: Request, { params }: RouteContext) {
       { status: 200 },
     );
   } catch (error: any) {
+    if (error.name === "ACLError") return handleACLError(error);
     return NextResponse.json(
       {
         success: false,
