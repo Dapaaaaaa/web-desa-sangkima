@@ -8,7 +8,11 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { LETTER_STATUSES, type LetterRequestData } from "../../types/letter";
+import {
+  LETTER_STATUSES,
+  type LetterAttachment,
+  type LetterRequestData,
+} from "../../types/letter";
 import { letterTypes } from "./letterTypes";
 import { users } from "./users";
 
@@ -28,10 +32,12 @@ export const letterRequests = mysqlTable("letter_requests", {
   purpose: varchar({ length: 500 }).notNull(),
   // jawaban field tambahan sesuai letter_types.required_fields
   data: json("data").$type<LetterRequestData>(),
+  // metadata lampiran pendukung (file fisik di folder privat uploads/lampiran)
+  attachments: json("attachments").$type<LetterAttachment[]>(),
   status: mysqlEnum(LETTER_STATUSES).notNull().default("DIAJUKAN"),
 
-  // diisi saat DISETUJUI
-  letterNumber: varchar("letter_number", { length: 100 }),
+  // diisi saat DISETUJUI; unique mencegah nomor kembar saat approve bersamaan
+  letterNumber: varchar("letter_number", { length: 100 }).unique(),
   // kode acak untuk verifikasi publik via QR (URL /verifikasi/{code})
   verificationCode: varchar("verification_code", { length: 64 }).unique(),
   pdfPath: varchar("pdf_path", { length: 255 }),

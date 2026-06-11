@@ -12,6 +12,7 @@ import {
   rejectLetterRequestSchema,
   processLetterRequestSchema,
   approveLetterRequestSchema,
+  type LetterAttachment,
   type LetterFieldDef,
   type LetterRequestDTO,
   type LetterStatus,
@@ -27,6 +28,11 @@ function toDTO(row: LetterRequestJoinedRow): LetterRequestDTO {
     status: r.status as LetterStatus,
     purpose: r.purpose,
     data: r.data ?? null,
+    attachments: (r.attachments ?? []).map((a) => ({
+      name: a.name,
+      mime: a.mime,
+      size: a.size,
+    })),
     letterNumber: r.letterNumber ?? null,
     rejectionReason: r.rejectionReason ?? null,
     verificationCode: r.verificationCode ?? null,
@@ -51,8 +57,12 @@ async function getRowOrThrow(id: string) {
 }
 
 export const letterRequestService = {
-  // Warga mengajukan surat
-  async create(actor: AuthUser, input: unknown): Promise<LetterRequestDTO> {
+  // Warga mengajukan surat (lampiran sudah divalidasi & disimpan oleh route)
+  async create(
+    actor: AuthUser,
+    input: unknown,
+    attachments: LetterAttachment[] = [],
+  ): Promise<LetterRequestDTO> {
     const data = createLetterRequestSchema.parse(input);
 
     const type = await letterTypeRepository.findById(data.letterTypeId);
@@ -74,6 +84,7 @@ export const letterRequestService = {
       letterTypeId: data.letterTypeId,
       purpose: data.purpose,
       data: data.data ?? null,
+      attachments: attachments.length > 0 ? attachments : null,
     });
     await letterRequestRepository.addLog({
       requestId: id,
@@ -149,16 +160,28 @@ export const letterRequestService = {
     }
 
     const now = new Date();
-    const sequence =
+    // nomor urut = surat disetujui tahun ini + 1; kolom letter_number UNIQUE,
+    // jadi kalau dua approve berbarengan menghasilkan nomor sama, yang kalah
+    // akan kena error duplikat -> coba lagi dengan nomor berikutnya
+    const baseSequence =
       (await letterRequestRepository.countApprovedInYear(now.getFullYear())) + 1;
 
-    await letterRequestRepository.update(id, {
-      status: "DISETUJUI",
-      approvedBy: actor.id,
-      approvedAt: now,
-      letterNumber: formatLetterNumber(sequence, now),
-      verificationCode: createId(),
-    });
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await letterRequestRepository.update(id, {
+          status: "DISETUJUI",
+          approvedBy: actor.id,
+          approvedAt: now,
+          letterNumber: formatLetterNumber(baseSequence + attempt, now),
+          verificationCode: createId(),
+        });
+        break;
+      } catch (e: any) {
+        const msg = String(e?.cause?.message ?? e?.message ?? "");
+        if (msg.includes("Duplicate entry") && attempt < 5) continue;
+        throw e;
+      }
+    }
     await letterRequestRepository.addLog({
       requestId: id,
       status: "DISETUJUI",

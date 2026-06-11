@@ -7,7 +7,7 @@ import {
   letterTypes,
   users,
 } from "../db/schema";
-import type { LetterStatus } from "../types/letter";
+import type { LetterAttachment, LetterStatus } from "../types/letter";
 
 // Kolom yang diambil untuk membentuk DTO (gabung pemohon + jenis surat)
 const detailSelect = {
@@ -36,6 +36,7 @@ type CreateValues = {
   letterTypeId: string;
   purpose: string;
   data: Record<string, string | number | null> | null;
+  attachments: LetterAttachment[] | null;
 };
 
 export const letterRequestRepository = {
@@ -47,6 +48,7 @@ export const letterRequestRepository = {
       letterTypeId: values.letterTypeId,
       purpose: values.purpose,
       data: values.data,
+      attachments: values.attachments,
       status: "DIAJUKAN",
     });
     return id;
