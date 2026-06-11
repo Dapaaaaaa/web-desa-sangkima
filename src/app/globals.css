@@ -1,39 +1,90 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   E-SURAT DESA SANGKIMA — bahasa desain "arsip resmi desa"
+   Kertas hangat + tinta + hijau hutan Kalimantan + aksen kuningan
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* kertas & tinta */
+  --color-paper: #f5f2ea; /* latar utama — kertas hangat */
+  --color-paper2: #ebe6d9; /* kertas lebih dalam (hover/zebra) */
+  --color-card: #fdfcf8; /* permukaan kartu/dokumen */
+  --color-ink: #211f19; /* teks utama — tinta hangat */
+  --color-inkmut: #6f695b; /* teks sekunder */
+  --color-line: #ddd6c5; /* garis hairline dokumen */
+
+  /* hijau hutan — identitas pemerintahan desa */
+  --color-pine-950: #0e1f18;
+  --color-pine-900: #14291f;
+  --color-pine-800: #1c3a2b;
+  --color-pine-700: #275138;
+  --color-pine-600: #346a4a;
+
+  /* aksen */
+  --color-brass: #8f6a1e; /* kuningan — nomor, tautan, cap */
+  --color-oxide: #9c3a28; /* merah oksida — penolakan */
+
+  /* tipografi */
+  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-plex-mono), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+::selection {
+  background: var(--color-pine-700);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+/* tekstur kertas — grain halus di seluruh halaman */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- komponen dasar dokumen ---------- */
+@layer components {
+  .card-doc {
+    @apply bg-card border border-line rounded-md;
+  }
+  .overline-doc {
+    @apply text-[11px] font-bold uppercase tracking-[0.18em] text-brass;
+  }
+  .label-doc {
+    @apply block text-[11px] font-semibold uppercase tracking-[0.14em] text-inkmut mb-2;
+  }
+  .input-doc {
+    @apply w-full bg-card border border-line rounded-[4px] px-3.5 py-3 text-sm text-ink placeholder:text-inkmut/50 transition-colors focus:outline-none focus:border-pine-600 focus:ring-2 focus:ring-pine-600/15;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-pine-800 text-paper text-sm font-semibold rounded-[4px] px-5 py-3 transition-colors hover:bg-pine-700 active:bg-pine-900 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 bg-card border border-line text-ink text-sm font-semibold rounded-[4px] px-5 py-3 transition-colors hover:bg-paper2/60 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-card border border-oxide/40 text-oxide text-sm font-semibold rounded-[4px] px-5 py-3 transition-colors hover:bg-oxide/5 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  /* font-family: Arial, Helvetica, sans-serif; */
-}
-
-/* 🚀 Kustomisasi Animasi Pop-Up & Pop-Close untuk Toast */
-
+/* ---------- animasi toast (dipertahankan) ---------- */
 @keyframes popupIn {
   0% {
     opacity: 0;
     transform: scale(0.85) translateY(-50px);
   }
   70% {
-    transform: scale(1.02) translateY(5px); /* Efek membal lembut */
+    transform: scale(1.02) translateY(5px);
   }
   100% {
     opacity: 1;
@@ -51,15 +102,30 @@ body {
   }
   100% {
     opacity: 0;
-    transform: scale(0.85) translateY(-50px); /* Kembali mengempis ke atas */
+    transform: scale(0.85) translateY(-50px);
   }
 }
 
-/* Kelas helper untuk kita panggil di komponen Toast */
 .animate-popup-in {
   animation: popupIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .animate-popup-out {
   animation: popupOut 0.3s ease-in forwards;
+}
+
+/* reveal halus saat halaman dimuat */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

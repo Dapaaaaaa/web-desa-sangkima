@@ -13,43 +13,48 @@ export default async function SuratSayaPage() {
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10 rise-in">
         <div>
-          <h1 className="text-2xl font-extrabold text-black">Surat Saya</h1>
-          <p className="text-sm text-[#797979] mt-1">
-            Riwayat semua pengajuan surat Anda.
+          <p className="overline-doc">Arsip Pribadi</p>
+          <h1 className="font-serif text-4xl font-medium tracking-tight mt-1.5">
+            Surat Saya
+          </h1>
+          <p className="text-sm text-inkmut mt-2">
+            Riwayat seluruh pengajuan surat Anda.
           </p>
         </div>
-        <Link
-          href="/dashboard/ajukan"
-          className="inline-flex items-center justify-center gap-2 bg-[#70C7FF] hover:bg-[#5bc0ff] text-black font-bold text-sm rounded-xl px-5 py-3 transition-colors active:scale-[0.99]"
-        >
-          + Ajukan Surat Baru
+        <Link href="/dashboard/ajukan" className="btn-primary">
+          Ajukan Surat Baru
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="card-doc overflow-hidden rise-in" style={{ animationDelay: "100ms" }}>
         {requests.length === 0 ? (
           <div className="px-6 py-16 text-center">
-            <p className="font-bold text-black mb-1">Belum ada surat</p>
-            <p className="text-sm text-[#797979]">
+            <p className="font-serif text-lg">Belum ada surat</p>
+            <p className="text-sm text-inkmut mt-1">
               Klik “Ajukan Surat Baru” untuk membuat pengajuan pertama Anda.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-line/70">
             {requests.map((r) => (
               <li key={r.id}>
                 <Link
                   href={`/dashboard/surat/${r.id}`}
-                  className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-paper2/40 transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="font-bold text-black text-sm truncate">
+                    <p className="font-semibold text-sm truncate">
                       {r.letterType.name}
                     </p>
-                    <p className="text-xs text-[#797979] mt-0.5 truncate">
-                      {r.letterNumber ? `${r.letterNumber} · ` : ""}
+                    <p className="text-xs text-inkmut mt-1 truncate">
+                      {r.letterNumber ? (
+                        <span className="font-mono text-brass">
+                          {r.letterNumber}
+                          {" · "}
+                        </span>
+                      ) : null}
                       Diajukan {formatTanggal(r.createdAt)}
                     </p>
                   </div>

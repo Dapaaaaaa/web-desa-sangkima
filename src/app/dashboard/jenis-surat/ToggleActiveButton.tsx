@@ -46,10 +46,10 @@ export default function ToggleActiveButton({
     <button
       onClick={toggle}
       disabled={busy}
-      className={`rounded-lg px-4 py-2 text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-60 ${
+      className={`rounded-[4px] border px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors disabled:opacity-60 ${
         active
-          ? "bg-white border border-gray-200 text-[#666] hover:bg-gray-50"
-          : "bg-[#70C7FF] hover:bg-[#5bc0ff] text-black"
+          ? "bg-card border-line text-inkmut hover:text-ink hover:bg-paper2/50"
+          : "bg-pine-800 border-pine-800 text-paper hover:bg-pine-700"
       }`}
     >
       {busy ? "..." : active ? "Nonaktifkan" : "Aktifkan"}

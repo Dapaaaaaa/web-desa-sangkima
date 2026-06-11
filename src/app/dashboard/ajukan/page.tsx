@@ -11,12 +11,19 @@ export default async function AjukanPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-extrabold text-black">Ajukan Surat</h1>
-      <p className="text-sm text-[#797979] mt-1 mb-8">
-        Pilih jenis surat dan lengkapi data yang diperlukan. Data diri Anda
-        diambil otomatis dari profil.
-      </p>
-      <AjukanForm types={types} />
+      <div className="rise-in">
+        <p className="overline-doc">Formulir Permohonan</p>
+        <h1 className="font-serif text-4xl font-medium tracking-tight mt-1.5">
+          Ajukan Surat
+        </h1>
+        <p className="text-sm text-inkmut mt-2 mb-8">
+          Pilih jenis surat dan lengkapi data yang diperlukan. Data diri Anda
+          diambil otomatis dari profil kependudukan.
+        </p>
+      </div>
+      <div className="rise-in" style={{ animationDelay: "100ms" }}>
+        <AjukanForm types={types} />
+      </div>
     </div>
   );
 }

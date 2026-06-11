@@ -39,27 +39,23 @@ export default function PermohonanActions({ id, status, role }: Props) {
     }
   };
 
-  const btn =
-    "flex-1 rounded-xl py-3 text-sm font-bold transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed";
-
   if (status === "DITOLAK" || status === "SELESAI") {
     return status === "SELESAI" ? (
       <a
         href={`/api/letter-requests/${id}/pdf`}
         target="_blank"
-        className={`${btn} mt-8 block text-center bg-white border border-gray-200 hover:bg-gray-50 text-black`}
+        className="btn-outline w-full mt-8"
       >
-        📄 Lihat Surat (PDF)
+        Lihat Surat (PDF)
       </a>
     ) : null;
   }
 
   return (
-    <div className="mt-8 border-t border-gray-100 pt-6">
-      {/* form alasan tolak */}
+    <div className="mt-8 border-t border-line pt-6">
       {showReject ? (
         <div className="flex flex-col gap-3">
-          <label htmlFor="reason" className="text-sm font-bold text-black">
+          <label htmlFor="reason" className="label-doc !mb-0">
             Alasan Penolakan
           </label>
           <textarea
@@ -68,20 +64,20 @@ export default function PermohonanActions({ id, status, role }: Props) {
             onChange={(e) => setReason(e.target.value)}
             placeholder="Contoh: Data alamat tidak sesuai KTP"
             rows={3}
-            className="w-full bg-[#EFEFEF] border-none rounded-lg py-3 px-4 text-sm text-black outline-none placeholder-[#999] focus:ring-2 focus:ring-red-200"
+            className="input-doc focus:!border-oxide focus:!ring-oxide/15"
           />
           <div className="flex gap-3">
             <button
               onClick={() => doAction({ action: "reject", reason }, "Permohonan ditolak.")}
               disabled={busy || reason.trim().length < 3}
-              className={`${btn} bg-red-500 hover:bg-red-600 text-white`}
+              className="btn-danger flex-1 !bg-oxide !text-paper !border-oxide hover:!bg-oxide/90"
             >
               {busy ? "Memproses..." : "Konfirmasi Tolak"}
             </button>
             <button
               onClick={() => setShowReject(false)}
               disabled={busy}
-              className={`${btn} bg-white border border-gray-200 hover:bg-gray-50 text-black`}
+              className="btn-outline flex-1"
             >
               Batal
             </button>
@@ -93,9 +89,9 @@ export default function PermohonanActions({ id, status, role }: Props) {
             <button
               onClick={() => doAction({ action: "process" }, "Permohonan mulai diproses.")}
               disabled={busy}
-              className={`${btn} bg-[#70C7FF] hover:bg-[#5bc0ff] text-black`}
+              className="btn-primary flex-1"
             >
-              {busy ? "Memproses..." : "✓ Proses Permohonan"}
+              {busy ? "Memproses..." : "Proses Permohonan"}
             </button>
           )}
 
@@ -109,12 +105,12 @@ export default function PermohonanActions({ id, status, role }: Props) {
                   )
                 }
                 disabled={busy}
-                className={`${btn} bg-green-500 hover:bg-green-600 text-white`}
+                className="btn-primary flex-1 !bg-pine-700 hover:!bg-pine-600"
               >
-                {busy ? "Memproses..." : "✓ Setujui & Terbitkan"}
+                {busy ? "Memproses..." : "Setujui & Terbitkan"}
               </button>
             ) : (
-              <p className="flex-1 text-center text-sm font-semibold text-[#797979] bg-gray-50 rounded-xl py-3">
+              <p className="flex-1 text-center text-[13px] font-semibold text-inkmut bg-paper2/50 border border-line rounded-[4px] py-3">
                 Menunggu persetujuan Kepala Desa
               </p>
             ))}
@@ -126,16 +122,16 @@ export default function PermohonanActions({ id, status, role }: Props) {
                   doAction({ action: "complete" }, "Surat ditandai selesai.")
                 }
                 disabled={busy}
-                className={`${btn} bg-[#70C7FF] hover:bg-[#5bc0ff] text-black`}
+                className="btn-primary flex-1"
               >
-                {busy ? "Memproses..." : "✓ Tandai Selesai"}
+                {busy ? "Memproses..." : "Tandai Selesai"}
               </button>
               <a
                 href={`/api/letter-requests/${id}/pdf`}
                 target="_blank"
-                className={`${btn} text-center bg-white border border-gray-200 hover:bg-gray-50 text-black`}
+                className="btn-outline flex-1"
               >
-                📄 Lihat PDF
+                Lihat PDF
               </a>
             </>
           )}
@@ -144,9 +140,9 @@ export default function PermohonanActions({ id, status, role }: Props) {
             <button
               onClick={() => setShowReject(true)}
               disabled={busy}
-              className={`${btn} bg-white border border-red-200 hover:bg-red-50 text-red-500`}
+              className="btn-danger flex-1"
             >
-              ✕ Tolak
+              Tolak Permohonan
             </button>
           )}
         </div>
