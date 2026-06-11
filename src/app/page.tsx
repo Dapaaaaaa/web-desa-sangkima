@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useToast } from "@/hooks/useToast";
 
 export default function LoginPage() {
@@ -26,7 +25,6 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Logika menangkap error validasi berlapis (Zod / Express Validator)
         if (response.status === 400 && data.errors) {
           const firstField = Object.keys(data.errors)[0];
           const firstMsg = data.errors[firstField]?.[0] ?? data.message;
@@ -35,128 +33,171 @@ export default function LoginPage() {
         throw new Error(data.message || "Gagal masuk ke akun Anda");
       }
 
-      // Memicu Toast Sukses Mini di Pojok Kanan Atas
-      toast("Selamat datang kembali! Mengalihkan ke sistem...", "Sistem Terverifikasi", "success", 4000);
-      
-      // Delay tipis agar user sempat melihat efek sukses toast sebelum pindah page
+      toast(
+        "Selamat datang kembali. Mengalihkan ke dasbor...",
+        "Berhasil Masuk",
+        "success",
+        4000,
+      );
       setTimeout(() => {
         router.push("/dashboard");
       }, 1000);
-
     } catch (err: any) {
       const msg = err?.message || "Gagal terhubung ke server";
-      
-      // 🔥 REVISI BERSIH: Langsung menembak jalur context utama tanpa bypass objek window browser
-      toast(msg, "Validasi Gagal", "error", 5000);
-      
+      toast(msg, "Gagal Masuk", "error", 5000);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="relative min-h-screen bg-[#EEEEEE] flex flex-col justify-start pt-[120px] px-5 pb-10 items-center md:pt-[140px] md:px-10 lg:justify-center lg:pt-0 font-sans select-none">
-      
-      {/* 1. Teks Judul Aplikasi Pojok Kiri Atas (Fluid Clamp Scale) */}
-      <h1 className="absolute text-black font-extrabold text-center transition-all duration-300
-        top-10 left-5 right-5 text-xl
-        md:left-10 md:right-auto md:text-2xl
-        lg:top-[6%] lg:left-[8%] lg:text-[clamp(1.5rem,2.5vw,2.25rem)] lg:text-left">
-        E-Surat Desa Yang Akan Dituju
-      </h1>
+    <main className="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
+      {/* ---------- Panel institusional (kiri) ---------- */}
+      <section className="relative hidden lg:flex flex-col justify-between bg-pine-900 text-paper overflow-hidden px-14 py-12">
+        {/* bingkai dokumen */}
+        <div className="absolute inset-4 border border-paper/15 rounded-sm pointer-events-none" />
+        {/* monogram raksasa samar */}
+        <span
+          aria-hidden
+          className="absolute -bottom-24 -right-6 font-serif italic text-[24rem] leading-none text-paper/[0.045] select-none pointer-events-none"
+        >
+          S
+        </span>
 
-      {/* 2. Kotak Card Utama Login (Sizing Adaptif untuk Monitor PC Besar) */}
-      <div className="w-full bg-white rounded-[20px] p-6 shadow-sm flex flex-col gap-5 items-center z-10 transition-all duration-300
-        md:max-w-[680px] md:p-[30px] md:gap-6 md:flex-row
-        lg:max-w-[900px] lg:p-12 lg:gap-12
-        xl:max-w-[1100px] xl:p-16 xl:gap-16
-        2xl:max-w-[1250px]">
+        <header className="relative rise-in">
+          <p className="overline-doc !text-paper/50">
+            Pemerintah Kabupaten Kutai Timur
+          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-paper/50 mt-1">
+            Kecamatan Sangatta Selatan
+          </p>
+        </header>
 
-        {/* Sisi Kiri: Wadah Ilustrasi Gambar Vektor */}
-        <div className="w-full flex justify-center items-center md:flex-1">
-          <div className="relative w-[160px] h-[120px] transition-all duration-300
-            md:w-[220px] md:h-[180px] 
-            lg:w-[340px] lg:h-[260px] 
-            xl:w-[420px] xl:h-[320px]
-            2xl:w-[480px] 2xl:h-[360px]">
-            <Image 
-              src="/undraw_subscribe_w8sz.svg"
-              alt="Ilustrasi Login E-Surat"
-              fill
-              className="object-contain"
-              priority
-            />
+        <div className="relative rise-in" style={{ animationDelay: "120ms" }}>
+          {/* segel desa */}
+          <div className="relative w-16 h-16 rounded-full border border-paper/40 grid place-items-center mb-8">
+            <div className="absolute inset-[5px] rounded-full border border-paper/25" />
+            <span className="font-serif font-semibold text-xl tracking-tight">
+              DS
+            </span>
           </div>
+
+          <h1 className="font-serif text-6xl font-medium tracking-tight leading-[1.05]">
+            E-Surat
+            <br />
+            <em className="text-paper/80">Desa Sangkima</em>
+          </h1>
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-paper/65">
+            Layanan administrasi surat-menyurat resmi bagi warga — ajukan dari
+            rumah, pantau prosesnya, dan terima surat bertanda tangan dengan
+            kode verifikasi.
+          </p>
         </div>
 
-        {/* Sisi Kanan: Form Konten Utama */}
-        <div className="w-full flex flex-col md:flex-1">
-          <h2 className="text-black font-extrabold text-center text-sm mb-5 md:text-left md:text-base md:mb-6 lg:text-[clamp(1.1rem,1.8vw,1.6rem)]">
-            Silahkan masuk sesuai akun anda
-          </h2>
+        <footer
+          className="relative rise-in text-[11px] tracking-[0.08em] uppercase text-paper/40"
+          style={{ animationDelay: "240ms" }}
+        >
+          Jl. Poros Sangatta–Bontang · Desa Sangkima · Kalimantan Timur
+        </footer>
+      </section>
 
-          <form onSubmit={handleSubmit} className="flex flex-col lg:gap-2">
-            
-            {/* Input Email Field */}
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-black text-sm font-bold mb-1.5 lg:text-base">
+      {/* ---------- Form masuk (kanan) ---------- */}
+      <section className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24 bg-paper">
+        {/* kop ringkas untuk layar kecil */}
+        <header className="lg:hidden mb-10 rise-in">
+          <div className="flex items-center gap-3">
+            <div className="relative w-11 h-11 rounded-full border border-ink/40 grid place-items-center shrink-0">
+              <div className="absolute inset-[4px] rounded-full border border-ink/20" />
+              <span className="font-serif font-semibold text-sm">DS</span>
+            </div>
+            <div>
+              <p className="font-serif text-xl font-medium leading-tight">
+                E-Surat Desa Sangkima
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-inkmut">
+                Kab. Kutai Timur · Kec. Sangatta Selatan
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <div className="w-full max-w-sm mx-auto lg:mx-0">
+          <p className="overline-doc rise-in">Layanan Warga</p>
+          <h2
+            className="font-serif text-4xl font-medium tracking-tight mt-2 rise-in"
+            style={{ animationDelay: "60ms" }}
+          >
+            Masuk ke akun Anda
+          </h2>
+          <p
+            className="text-sm text-inkmut mt-3 mb-10 rise-in"
+            style={{ animationDelay: "120ms" }}
+          >
+            Gunakan email dan kata sandi yang terdaftar di kantor desa.
+          </p>
+
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5 rise-in"
+            style={{ animationDelay: "180ms" }}
+          >
+            <div>
+              <label htmlFor="email" className="label-doc">
                 Email
               </label>
-              <input 
+              <input
                 type="email"
                 id="email"
-                placeholder="Masukan Email Anda"
+                placeholder="nama@contoh.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-[#E1E1E1] border-none rounded-lg py-3 px-4 text-xs text-black outline-none placeholder-[#797979] lg:text-sm lg:py-4 transition-all focus:ring-2 focus:ring-[#70C7FF]/40"
+                className="input-doc"
                 autoComplete="email"
               />
             </div>
 
-            {/* Input Password Field */}
-            <div className="mb-4">
-              <label htmlFor="password" className="block text-black text-sm font-bold mb-1.5 lg:text-base">
-                Password
-              </label>
-              <input 
+            <div>
+              <div className="flex items-baseline justify-between mb-2">
+                <label htmlFor="password" className="label-doc !mb-0">
+                  Kata Sandi
+                </label>
+                <a
+                  href="/forgot-password"
+                  className="text-xs font-semibold text-brass hover:underline underline-offset-2"
+                >
+                  Lupa sandi?
+                </a>
+              </div>
+              <input
                 type="password"
                 id="password"
-                placeholder="Masukan Password Anda"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-[#E1E1E1] border-none rounded-lg py-3 px-4 text-xs text-black outline-none placeholder-[#797979] lg:text-sm lg:py-4 transition-all focus:ring-2 focus:ring-[#70C7FF]/40"
+                className="input-doc"
+                autoComplete="current-password"
               />
             </div>
 
-            {/* Aksi Lupa Sandi */}
-            <div className="text-right mb-5 lg:mb-6">
-              <a href="/forgot-password" className="text-xs font-bold text-[#009FFF] hover:underline lg:text-sm">
-                Lupa Sandi?
-              </a>
-            </div>
-
-            {/* Tombol Eksekusi Submit */}
-            <button 
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-[#70C7FF] text-black border-none rounded-lg py-3 text-sm font-bold text-center transition-all duration-200 hover:bg-[#5bc0ff] disabled:opacity-70 disabled:cursor-not-allowed lg:py-4 lg:text-base active:scale-[0.99]"
-            >
+            <button type="submit" disabled={isLoading} className="btn-primary mt-2">
               {isLoading ? "Memproses..." : "Masuk"}
             </button>
 
-            {/* Pendaftaran Akun Baru */}
-            <div className="text-center mt-4 text-xs text-[#777777] lg:text-sm lg:mt-6">
+            <div className="border-t border-line pt-5 text-center text-xs text-inkmut">
               Belum punya akun?{" "}
-              <a href="/register" className="font-bold text-[#009FFF] hover:underline">
-                Daftar
+              <a
+                href="/register"
+                className="font-semibold text-brass hover:underline underline-offset-2"
+              >
+                Daftar sebagai warga
               </a>
             </div>
           </form>
         </div>
-
-      </div>
+      </section>
     </main>
   );
 }
