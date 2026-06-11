@@ -98,7 +98,7 @@ export async function generateLetterPdf(input: LetterPdfInput): Promise<Uint8Arr
   y -= 30;
 
   // === JUDUL ===
-  const title = `SURAT KETERANGAN`.toUpperCase();
+  const title = (input.letterTypeName || "Surat Keterangan").toUpperCase();
   center(title, y, 13, bold);
   const tw = bold.widthOfTextAtSize(title, 13);
   page.drawLine({

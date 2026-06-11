@@ -4,9 +4,11 @@
  *   post:
  *     tags:
  *       - Utilities
- *     summary: "🧪 Test email configuration"
- *     description: Test email configuration by sending a test email. Development/debugging purpose only.
+ *     summary: "🧪 Test email configuration (admin)"
+ *     description: Test email configuration by sending a test email. Development/debugging purpose only. Admin only.
  *     operationId: testEmailConfig
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -37,8 +39,19 @@
  */
 
 import { NextResponse } from "next/server";
+import {
+  requireRole,
+  handleACLError,
+} from "@/server/middlewares/acl.middleware";
 
 export async function POST(req: Request) {
+  // endpoint utilitas: hanya admin, agar tidak bisa dipakai spam email
+  try {
+    await requireRole(req, ["admin"]);
+  } catch (error) {
+    return handleACLError(error);
+  }
+
   try {
     const body = await req.json();
     const { testEmail } = body;

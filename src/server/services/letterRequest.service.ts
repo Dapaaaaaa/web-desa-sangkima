@@ -149,16 +149,28 @@ export const letterRequestService = {
     }
 
     const now = new Date();
-    const sequence =
+    // nomor urut = surat disetujui tahun ini + 1; kolom letter_number UNIQUE,
+    // jadi kalau dua approve berbarengan menghasilkan nomor sama, yang kalah
+    // akan kena error duplikat -> coba lagi dengan nomor berikutnya
+    const baseSequence =
       (await letterRequestRepository.countApprovedInYear(now.getFullYear())) + 1;
 
-    await letterRequestRepository.update(id, {
-      status: "DISETUJUI",
-      approvedBy: actor.id,
-      approvedAt: now,
-      letterNumber: formatLetterNumber(sequence, now),
-      verificationCode: createId(),
-    });
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await letterRequestRepository.update(id, {
+          status: "DISETUJUI",
+          approvedBy: actor.id,
+          approvedAt: now,
+          letterNumber: formatLetterNumber(baseSequence + attempt, now),
+          verificationCode: createId(),
+        });
+        break;
+      } catch (e: any) {
+        const msg = String(e?.cause?.message ?? e?.message ?? "");
+        if (msg.includes("Duplicate entry") && attempt < 5) continue;
+        throw e;
+      }
+    }
     await letterRequestRepository.addLog({
       requestId: id,
       status: "DISETUJUI",

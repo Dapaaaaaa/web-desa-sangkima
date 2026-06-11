@@ -30,8 +30,8 @@ export const letterRequests = mysqlTable("letter_requests", {
   data: json("data").$type<LetterRequestData>(),
   status: mysqlEnum(LETTER_STATUSES).notNull().default("DIAJUKAN"),
 
-  // diisi saat DISETUJUI
-  letterNumber: varchar("letter_number", { length: 100 }),
+  // diisi saat DISETUJUI; unique mencegah nomor kembar saat approve bersamaan
+  letterNumber: varchar("letter_number", { length: 100 }).unique(),
   // kode acak untuk verifikasi publik via QR (URL /verifikasi/{code})
   verificationCode: varchar("verification_code", { length: 64 }).unique(),
   pdfPath: varchar("pdf_path", { length: 255 }),
