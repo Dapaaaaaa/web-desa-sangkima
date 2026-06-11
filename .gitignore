@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# lampiran e-surat (file privat warga, jangan ikut repo)
+/uploads

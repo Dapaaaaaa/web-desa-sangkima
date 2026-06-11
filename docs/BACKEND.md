@@ -169,7 +169,14 @@ Nomor urut dihitung dari jumlah surat yang disetujui pada tahun berjalan + 1.
 | GET | `/api/letter-requests/{id}` | pemilik / petugas | Detail pengajuan |
 | PATCH | `/api/letter-requests/{id}` | staff/admin | Aksi: `process` / `approve` (admin) / `reject` / `complete` |
 | GET | `/api/letter-requests/{id}/pdf` | pemilik / petugas | Unduh PDF (status DISETUJUI/SELESAI) |
+| GET | `/api/letter-requests/{id}/lampiran/{index}` | pemilik / petugas | Unduh lampiran pendukung ke-{index} |
 | GET | `/api/letter-requests/verify/{code}` | **publik** | Verifikasi keaslian via QR |
+
+**Lampiran pendukung** (mis. scan KTP/KK): `POST /api/letter-requests` juga menerima
+`multipart/form-data` — field teks `letterTypeId`, `purpose`, `data` (JSON string)
+plus file pada key `lampiran`. Maksimal 3 berkas, 2 MB/berkas, format PDF/JPG/PNG.
+File disimpan privat di folder `uploads/` (di-gitignore, bukan `public/`) dan hanya
+bisa diakses lewat endpoint berotentikasi di atas.
 
 **Body PATCH (aksi petugas):**
 ```json

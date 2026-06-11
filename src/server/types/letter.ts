@@ -78,6 +78,26 @@ export type LetterFieldDef = z.infer<typeof letterFieldDefSchema>;
 export type LetterRequestData = Record<string, string | number | null>;
 
 /* -------------------------------------------------------------------------- */
+/*  Lampiran pendukung (mis. scan KTP/KK)                                     */
+/* -------------------------------------------------------------------------- */
+
+// Metadata lampiran yang disimpan di DB. File fisiknya ada di folder privat
+// `uploads/lampiran` dan hanya bisa diakses lewat endpoint berotentikasi.
+export type LetterAttachment = {
+  name: string; // nama asli file dari warga (sudah disanitasi)
+  storedName: string; // nama file di disk (cuid + ekstensi)
+  mime: string;
+  size: number; // bytes
+};
+
+// Versi yang dikirim ke frontend (tanpa storedName — lokasi disk tak perlu bocor)
+export type LetterAttachmentDTO = {
+  name: string;
+  mime: string;
+  size: number;
+};
+
+/* -------------------------------------------------------------------------- */
 /*  Kontrak: kelola jenis surat (admin / kepala desa)                         */
 /* -------------------------------------------------------------------------- */
 
@@ -168,6 +188,7 @@ export type LetterRequestDTO = {
   status: LetterStatus;
   purpose: string;
   data: LetterRequestData | null;
+  attachments: LetterAttachmentDTO[];
   letterNumber: string | null;
   rejectionReason: string | null;
   verificationCode: string | null;
