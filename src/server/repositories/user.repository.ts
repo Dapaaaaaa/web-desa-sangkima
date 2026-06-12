@@ -42,6 +42,7 @@ export const userRepository = {
       email: data.email,
       nik: data.nik,
       password: data.passwordHash,
+      role: "user",
     });
 
     return {
