@@ -136,7 +136,7 @@ export default function RegisterPage() {
             Daftar Akun Baru
           </h2>
           <p
-            className="text-sm text-inkmut mt-3 mb-8 rise-in"
+            className="text-sm text-inkmut mt-1 mb-4 rise-in"
             style={{ animationDelay: "120ms" }}
           >
             Lengkapi data diri Anda sesuai dengan KTP untuk mendaftar sistem layanan surat.
