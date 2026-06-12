@@ -1,51 +1,124 @@
-"use client";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import StatusBadge from "@/components/esurat/StatusBadge";
+import { getSessionUser } from "@/server/utils/session";
+import { letterRequestService } from "@/server/services/letterRequest.service";
+import { LETTER_STATUSES } from "@/server/types/letter";
+import { formatTanggal } from "@/lib/format";
 
-import React, { useState } from "react";
-import Sidebar from "@/app/dashboard/Sidebar";
-import StatCards from "@/app/dashboard/Statcards";
-import ActivityTable from "@/app/dashboard/ActivityTable";
+export default async function DashboardPage() {
+  const session = await getSessionUser();
+  if (!session) redirect("/");
 
-// Definisikan tipe Role untuk memastikan type-safety lintas platform
-type Role = "warga" | "staff" | "admin";
+  const requests =
+    session.role === "user"
+      ? await letterRequestService.listForUser(session.id)
+      : await letterRequestService.listAll();
 
-export default function DashboardPage() {
-  // 💡 Simulasi State Role: Silakan ganti nilai string ini ("warga", "staff", atau "admin") untuk menguji tampilan tiap role
-  const [currentRole, setCurrentRole] = useState<Role>("warga");
-  const [activeMenu, setActiveMenu] = useState("Beranda");
+  const counts = Object.fromEntries(
+    LETTER_STATUSES.map((s) => [s, requests.filter((r) => r.status === s).length]),
+  );
+  const recent = requests.slice(0, 5);
+  const isPetugas = session.role !== "user";
+
+  const statCards = [
+    { label: "Diajukan", value: counts.DIAJUKAN, accent: "bg-inkmut" },
+    { label: "Diproses", value: counts.DIPROSES, accent: "bg-brass" },
+    { label: "Disetujui", value: counts.DISETUJUI + counts.SELESAI, accent: "bg-pine-600" },
+    { label: "Ditolak", value: counts.DITOLAK, accent: "bg-oxide" },
+  ];
 
   return (
-    // Pembungkus Paling Luar: Menggunakan min-h-screen untuk memastikan latar belakang #EEEEEE memenuhi layar di semua OS
-    <div className="min-h-screen bg-[#EEEEEE] flex font-sans select-none overflow-x-hidden">
-      
-      {/* 🧭 KANAN/KIRI LAYERING: SIDEBAR MENU UTAMA */}
-      <Sidebar 
-        currentRole={currentRole} 
-        setCurrentRole={setCurrentRole} 
-        activeMenu={activeMenu} 
-        setActiveMenu={setActiveMenu} 
-      />
+    <div>
+      {/* Kop halaman */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10 rise-in">
+        <div>
+          <p className="overline-doc">Beranda</p>
+          <h1 className="font-serif text-4xl font-medium tracking-tight mt-1.5">
+            Selamat datang, {session.name.split(" ")[0]}
+          </h1>
+          <p className="text-sm text-inkmut mt-2">
+            {isPetugas
+              ? "Ringkasan permohonan surat warga Desa Sangkima."
+              : "Kelola pengajuan surat Anda di Desa Sangkima."}
+          </p>
+        </div>
+        {session.role === "user" && (
+          <Link href="/dashboard/ajukan" className="btn-primary">
+            Ajukan Surat Baru
+          </Link>
+        )}
+      </div>
 
-      {/* 🖥️ KONTEN UTAMA DASHBOARD */}
-      <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
-        
-        {/* 1. LAYER ATAS: CARD KARTU SELAMAT DATANG USER */}
-        <header className="w-full bg-white rounded-[16px] p-5 shadow-sm flex justify-between items-center border border-gray-100">
-          <div className="flex flex-col gap-0.5">
-            <h1 className="text-black font-extrabold text-base md:text-lg">
-              Selamat datang, {currentRole === "warga" ? "Username" : currentRole === "staff" ? "Staff Administrasi" : "Super Admin"}
-            </h1>
-            <span className="text-xs text-[#797979] font-medium">Kicaumaniaa@gmail.com</span>
+      {/* Statistik */}
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 rise-in"
+        style={{ animationDelay: "80ms" }}
+      >
+        {statCards.map((c) => (
+          <div key={c.label} className="card-doc p-5">
+            <span className={`block w-6 h-[3px] ${c.accent} mb-4`} />
+            <p className="font-serif text-4xl font-medium tabular-nums">
+              {c.value}
+            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-inkmut mt-1.5">
+              {c.label}
+            </p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#E1E1E1]" />
-        </header>
+        ))}
+      </div>
 
-        {/* 2. LAYER TENGAH: GRID STATISTIK DINAMIS MENGIKUTI ROLE */}
-        <StatCards currentRole={currentRole} />
+      {/* Terbaru */}
+      <div className="card-doc overflow-hidden rise-in" style={{ animationDelay: "160ms" }}>
+        <div className="flex items-baseline justify-between px-6 py-4 border-b border-line">
+          <h2 className="font-serif text-xl font-medium">
+            {isPetugas ? "Permohonan Terbaru" : "Pengajuan Terbaru"}
+          </h2>
+          <Link
+            href={isPetugas ? "/dashboard/permohonan" : "/dashboard/surat"}
+            className="text-xs font-semibold text-brass hover:underline underline-offset-2"
+          >
+            Lihat semua →
+          </Link>
+        </div>
 
-        {/* 3. LAYER BAWAH: WIDGET TABEL AKTIVITAS SURAT TERBARU */}
-        <ActivityTable />
-
-      </main>
+        {recent.length === 0 ? (
+          <div className="px-6 py-14 text-center">
+            <p className="font-serif text-lg">Belum ada pengajuan</p>
+            <p className="text-sm text-inkmut mt-1">
+              {isPetugas
+                ? "Permohonan surat dari warga akan tampil di sini."
+                : "Mulai dengan mengajukan surat pertama Anda."}
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-line/70">
+            {recent.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={
+                    isPetugas
+                      ? `/dashboard/permohonan/${r.id}`
+                      : `/dashboard/surat/${r.id}`
+                  }
+                  className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-paper2/40 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">
+                      {r.letterType.name}
+                    </p>
+                    <p className="text-xs text-inkmut mt-1 truncate">
+                      {isPetugas ? `${r.requester.name} · ` : ""}
+                      {formatTanggal(r.createdAt)}
+                    </p>
+                  </div>
+                  <StatusBadge status={r.status} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
