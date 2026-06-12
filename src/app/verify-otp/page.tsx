@@ -24,10 +24,14 @@ export default function VerifyOtpPage() {
 
   // Handler input pindah otomatis ke box sebelah
   const handleChange = (element: HTMLInputElement, index: number) => {
-    if (isNaN(Number(element.value))) return false;
+    
+    const rawValue = element.value;
+
+    const lastChar = rawValue.substring(rawValue.length - 1);
+    if (lastChar && isNaN(Number(lastChar))) return false;
 
     const newOtp = [...otp];
-    newOtp[index] = element.value;
+    newOtp[index] = lastChar;
     setOtp(newOtp);
 
     // 🚀 PERBAIKAN TypeScript: Menggunakan optional chaining (?.) untuk menghindari crash objek null
@@ -106,7 +110,6 @@ export default function VerifyOtpPage() {
                 <input
                   key={index}
                   type="text"
-                  maxLength={1}
                   // 🚀 PERBAIKAN TypeScript: Mencegah elemen null masuk ke penampung array ref
                   ref={(el) => {
                     if (el) inputRefs.current[index] = el;
@@ -114,6 +117,7 @@ export default function VerifyOtpPage() {
                   value={data}
                   onChange={(e) => handleChange(e.target, index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
+                  onFocus={(e) => e.target.select()}
                   className="w-full h-14 sm:h-16 text-center text-2xl font-serif font-bold bg-white border border-line rounded-sm focus:border-pine-900 focus:ring-1 focus:ring-pine-900 outline-none transition-all"
                 />
               ))}
